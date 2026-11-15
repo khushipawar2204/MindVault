@@ -1,1 +1,265 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindVault | Your Second Brain</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f7f5fc;
+    color: #29243b;
+}
+
+header {
+    background: #7560a5;
+    color: white;
+    padding: 24px 7%;
+}
+
+header h1 { margin: 0; font-size: 28px; }
+header p { margin-bottom: 0; opacity: .9; }
+
+.container {
+    max-width: 1050px;
+    margin: 35px auto;
+    padding: 0 20px;
+}
+
+.welcome {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    margin-bottom: 25px;
+}
+
+.form, .notes-section {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    margin-bottom: 25px;
+}
+
+input, textarea, select {
+    width: 100%;
+    padding: 13px;
+    margin: 9px 0 15px;
+    border: 1px solid #ded8eb;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+textarea { min-height: 110px; resize: vertical; }
+
+button {
+    border: none;
+    background: #7560a5;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+button:hover { background: #5e498c; }
+
+.search { margin-bottom: 20px; }
+
+.note {
+    background: #f8f6fc;
+    padding: 18px;
+    border-radius: 10px;
+    margin: 12px 0;
+    border-left: 4px solid #927cbd;
+}
+
+.note h3 { margin-top: 0; }
+
+.note small { color: #777; }
+
+.actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.delete { background: #d65b68; }
+.edit { background: #6687b8; }
+
+footer {
+    text-align: center;
+    padding: 25px;
+    color: #777;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>🧠 MindVault</h1>
+    <p>Your Second Brain – Save. Organize. Remember.</p>
+</header>
+
+<div class="container">
+
+    <section class="welcome">
+        <h2>Welcome to MindVault ✨</h2>
+        <p>Your personal space to store ideas, notes and important information.</p>
+        <h3 id="count">0 Notes Saved</h3>
+    </section>
+
+    <section class="form">
+        <h2>➕ Add a New Note</h2>
+
+        <input id="title" placeholder="Enter note title">
+
+        <select id="category">
+            <option value="Personal">Personal</option>
+            <option value="Study">Study</option>
+            <option value="Ideas">Ideas</option>
+            <option value="Work">Work</option>
+            <option value="Important">Important</option>
+        </select>
+
+        <textarea id="content" placeholder="Write your note here..."></textarea>
+
+        <button onclick="saveNote()">Save Note</button>
+    </section>
+
+    <section class="notes-section">
+        <h2>📚 My Notes</h2>
+
+        <input class="search" id="search"
+        placeholder="🔍 Search your notes..."
+        oninput="displayNotes()">
+
+        <div id="notes"></div>
+    </section>
+
+</div>
+
+<footer>
+    Made with ❤️ | MindVault – Your Second Brain
+</footer>
+
+<script>
+let notes = JSON.parse(localStorage.getItem("mindvault_notes") || "[]");
+
+function saveData() {
+    localStorage.setItem("mindvault_notes", JSON.stringify(notes));
+}
+
+function saveNote() {
+    const title = document.getElementById("title").value.trim();
+    const category = document.getElementById("category").value;
+    const content = document.getElementById("content").value.trim();
+
+    if (!title || !content) {
+        alert("Please enter both title and content!");
+        return;
+    }
+
+    notes.push({
+        id: Date.now(),
+        title,
+        category,
+        content
+    });
+
+    saveData();
+
+    document.getElementById("title").value = "";
+    document.getElementById("content").value = "";
+
+    displayNotes();
+    alert("Note saved successfully!");
+}
+
+function deleteNote(id) {
+    if (!confirm("Are you sure you want to delete this note?")) return;
+
+    notes = notes.filter(note => note.id !== id);
+    saveData();
+    displayNotes();
+}
+
+function editNote(id) {
+    const note = notes.find(n => n.id === id);
+
+    const newTitle = prompt("Edit title:", note.title);
+    if (newTitle === null || !newTitle.trim()) return;
+
+    const newContent = prompt("Edit content:", note.content);
+    if (newContent === null || !newContent.trim()) return;
+
+    note.title = newTitle.trim();
+    note.content = newContent.trim();
+
+    saveData();
+    displayNotes();
+}
+
+function displayNotes() {
+    const search = document.getElementById("search").value.toLowerCase();
+
+    const filtered = notes.filter(note =>
+        note.title.toLowerCase().includes(search) ||
+        note.content.toLowerCase().includes(search) ||
+        note.category.toLowerCase().includes(search)
+    );
+
+    document.getElementById("count").textContent =
+        notes.length + " Notes Saved";
+
+    const container = document.getElementById("notes");
+    container.innerHTML = "";
+
+    if (filtered.length === 0) {
+        container.textContent = "No notes found. Add your first note!";
+        return;
+    }
+
+    filtered.forEach(note => {
+        const card = document.createElement("div");
+        card.className = "note";
+
+        const heading = document.createElement("h3");
+        heading.textContent = note.title;
+
+        const category = document.createElement("small");
+        category.textContent = "Category: " + note.category;
+
+        const content = document.createElement("p");
+        content.textContent = note.content;
+
+        const actions = document.createElement("div");
+        actions.className = "actions";
+
+        const edit = document.createElement("button");
+        edit.className = "edit";
+        edit.textContent = "Edit";
+        edit.onclick = () => editNote(note.id);
+
+        const remove = document.createElement("button");
+        remove.className = "delete";
+        remove.textContent = "Delete";
+        remove.onclick = () => deleteNote(note.id);
+
+        actions.append(edit, remove);
+        card.append(heading, category, content, actions);
+        container.appendChild(card);
+    });
+}
+
+displayNotes();
+</script>
+
+</body>
+</html>
+
