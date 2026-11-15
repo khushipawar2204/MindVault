@@ -1,4 +1,3 @@
-
 import streamlit as st
 import sqlite3
 
@@ -448,6 +447,12 @@ st.markdown(
     "Capture. Organize. Remember.</p></center>",
     unsafe_allow_html=True
 )
+
+
+
+
+
+
 
 
 
